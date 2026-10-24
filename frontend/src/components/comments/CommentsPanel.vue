@@ -29,6 +29,33 @@
           @click="commentsState.open = false"
         />
       </v-toolbar>
+      <v-chip-group
+        v-model="commentsState.showResolved"
+        mandatory
+        class="flex-0-0 px-3 pt-0 pb-2"
+        data-testid="comments-resolved-toggle"
+      >
+        <v-chip
+          :value="false"
+          label
+          color="primary"
+          base-color="surface"
+          :border="commentsState.showResolved === false ? null : 'sm'"
+          :variant="commentsState.showResolved === false ? 'outlined' : 'flat'"
+        >
+          {{ $t('components.comments.commentsPanel.open') }}
+        </v-chip>
+        <v-chip
+          :value="true"
+          label
+          color="primary"
+          base-color="surface"
+          :border="commentsState.showResolved === true ? null : 'sm'"
+          :variant="commentsState.showResolved === true ? 'outlined' : 'flat'"
+        >
+          {{ $t('components.comments.commentsPanel.all') }}
+        </v-chip>
+      </v-chip-group>
       <v-divider />
       <CommentsList
         v-if="commentsState.open"
@@ -36,6 +63,8 @@
         :comments="visibleComments"
         :loading="comments._meta.loading"
         :show-context="showContext"
+        :empty-text="emptyText"
+        @replied="reload"
       >
         <template #after>
           <p
@@ -59,6 +88,7 @@
         v-if="commentsState.open"
         :camp="camp"
         :activity="activity"
+        class="pa-3"
         @created="reloadAndScrollToBottom"
       />
     </v-sheet>
@@ -76,6 +106,7 @@ import {
   resetCommentsState,
 } from '@/components/comments/commentsState.js'
 import { scopedComments } from '@/components/comments/scopedComments.js'
+import { isResolved } from '@/components/comments/commentThreads.js'
 import { campRoleMixin } from '@/mixins/campRoleMixin.js'
 import { activityFromRoute, campFromRoute } from '@/router.js'
 
@@ -106,13 +137,27 @@ export default {
       return this.$vuetify.display.smAndDown
     },
     visibleComments() {
-      return scopedComments(this.comments, this.activity, this.mobile)
+      return scopedComments(
+        this.comments,
+        this.activity,
+        this.mobile,
+        commentsState.showResolved
+      )
+    },
+    emptyText() {
+      if (this.visibleComments.length || commentsState.showResolved) return null
+      const withResolved = scopedComments(this.comments, this.activity, this.mobile, true)
+      return withResolved.length
+        ? this.$t('components.comments.commentsList.noOpenComments')
+        : this.$t('components.comments.commentsList.empty')
     },
     showContext() {
       return !this.activity && this.mobile
     },
     hiddenCommentCount() {
-      return this.comments.items.length - this.visibleComments.length
+      return this.comments.items.filter(
+        (comment) => typeof comment.activity === 'function' && !isResolved(comment)
+      ).length
     },
     category() {
       return typeof this.activity?.category === 'function'
@@ -153,6 +198,9 @@ export default {
     },
   },
   methods: {
+    reload() {
+      return this.comments.$reload()
+    },
     async reloadAndScrollToBottom() {
       await this.comments.$reload()
       await this.$nextTick()
