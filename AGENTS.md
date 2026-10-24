@@ -50,8 +50,7 @@ Comments in code mostly age poorly. Please use the following framework to decide
    Behaviour covered by a test needs no prose.
 2. Prefer commit messages to code comments, because a git blame is more telling and easier to research than
    figuring out the repo code state back when a comment was written. Match the style and length of other,
-   human-made commits. No figures of speech, just objective facts in short form. NEVER more than 1 commit
-   line + 3 lines of commit message.
+   human-made commits. No figures of speech, just objective facts in short form. Aim for 1 subject line plus at most 3 lines of body.
 3. Only if the information is directly about the class / method being commented, only if it can't be expressed
    through the above means of documentation adequately, and only if it is relevant every single time a piece of
    code is read, forever: Only then create a comment. Even then, only include the information that isn't
@@ -62,7 +61,7 @@ Comments in code mostly age poorly. Please use the following framework to decide
 **Guiding Principles** for writing documentation and especially the rare comments:
 
 - NEVER reference comments, method names or implementation locations from other files. These will
-  be outdated very quickly.
+  be outdated very quickly. Exception: PHP docblock/annotation type references (e.g. `@var`, imported/FQCN class names) that static analysis tools such as psalm/phpstan rely on.
 - NEVER narrate, retell or even mention earlier versions or decisions from previous iterations in
   the conversation history, or how it used to be implemented. Any documentation must be written
   as if this was the first ever implementation, and understandable by anyone without any history,
